@@ -134,7 +134,7 @@ const coloredCircle = (
   options: MapCircleOptions
 ): Feature<Polygon> => ({
   ...circlePolygon(center, options.radius),
-  properties: { color: options.color },
+  properties: { color: options.color, outline: options.outline !== false },
 });
 
 const pathLines = (path: MapPath): FeatureCollection => ({
@@ -927,7 +927,10 @@ export class MapLibreMapEngine implements MapEngine {
       id: `${id}-line`,
       type: "line",
       source: id,
-      paint: { "line-color": ["get", "color"], "line-width": 3 },
+      paint: {
+        "line-color": ["get", "color"],
+        "line-width": ["case", ["get", "outline"], 3, 0],
+      },
     });
     return {
       update: (newCenter, newOptions) => {

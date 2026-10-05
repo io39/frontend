@@ -90,6 +90,8 @@ export interface MapCircleOptions {
   radius: number;
   /** Stroke color; the fill is derived from it, translucent */
   color: string;
+  /** Stroke the circle; defaults to true */
+  outline?: boolean;
 }
 
 export interface MapPathSegment {
