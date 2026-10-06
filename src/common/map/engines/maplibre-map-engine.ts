@@ -1010,9 +1010,25 @@ export class MapLibreMapEngine implements MapEngine {
 
     let resizeMarker: MapLibreMarker | undefined;
     let resizeHandle: HTMLElement | undefined;
+    // The user's hand wins while dragging; the host is the truth otherwise
+    let dragging = false;
+    // Hidden while the circle is under the center element
+    const syncResizeHandleVisibility = () => {
+      if (!resizeHandle || dragging) {
+        return;
+      }
+      const east = pointEastOf(currentCenter, currentRadius);
+      const centerPoint = map.project([currentCenter[1], currentCenter[0]]);
+      const eastPoint = map.project([east[1], east[0]]);
+      const covered =
+        Math.hypot(eastPoint.x - centerPoint.x, eastPoint.y - centerPoint.y) <
+        centerSize[0] / 2;
+      resizeHandle.style.display = covered ? "none" : "";
+    };
     const placeResizeHandle = () => {
       const east = pointEastOf(currentCenter, currentRadius);
       resizeMarker?.setLngLat([east[1], east[0]]);
+      syncResizeHandleVisibility();
       const radiusText = String(Math.round(currentRadius));
       resizeHandle?.setAttribute(
         "aria-valuemax",
@@ -1023,10 +1039,8 @@ export class MapLibreMapEngine implements MapEngine {
       resizeHandle?.setAttribute("aria-valuetext", radiusText);
     };
 
-    // The user's hand wins while dragging; the host is the truth otherwise
-    let dragging = false;
-
     if (options.resizable) {
+      map.on("zoom", syncResizeHandleVisibility);
       const east = pointEastOf(center, options.radius);
       resizeHandle = createResizeHandleElement(options.resizeLabel);
       resizeMarker = new maplibre.Marker({
@@ -1097,6 +1111,7 @@ export class MapLibreMapEngine implements MapEngine {
       });
       handleMarker?.on("dragend", () => {
         dragging = false;
+        syncResizeHandleVisibility();
       });
     });
 
@@ -1170,6 +1185,7 @@ export class MapLibreMapEngine implements MapEngine {
         resetMarkerElement(centerEl);
         clearMarkerAccessibility(centerEl);
         this._placedElements.delete(centerEl);
+        map.off("zoom", syncResizeHandleVisibility);
         resizeMarker?.remove();
         this._removeCustomLayer(`${id}-fill`);
         this._removeCustomLayer(`${id}-line`);
