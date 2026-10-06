@@ -33,7 +33,6 @@ import type {
   HaMapEntity,
   HaMapPathPoint,
   HaMapPaths,
-  HaMapView,
   MapCardMarkerLabelMode,
 } from "../../../components/map/ha-map";
 import type { MapFitPadding, MapLatLng } from "../../../common/map/map-engine";
@@ -52,6 +51,14 @@ import type { HomeAssistant } from "../../../types";
 import type { HASSDomEvent } from "../../../common/dom/fire_event";
 import type { OverviewTab } from "./map/hui-map-overview";
 import { PANEL_VIEW_LAYOUT } from "../views/const";
+import { getHistoryState, navigate } from "../../../common/navigate";
+import { mainWindow } from "../../../common/dom/get_main_window";
+import { constructUrlCurrentPath } from "../../../common/url/construct-url";
+import {
+  addSearchParam,
+  extractSearchParam,
+  removeSearchParam,
+} from "../../../common/url/search-params";
 import { findEntities } from "../common/find-entities";
 import {
   hasConfigChanged,
@@ -76,6 +83,8 @@ const OVERVIEW_GAP = 12;
 
 const FOCUS_PERSON_ZOOM = 19;
 const FOCUS_ZONE_MAX_ZOOM = 18;
+const SELECTED_ENTITY_PARAM = "entity_id";
+const SELECTION_HISTORY_KEY = "mapOverview";
 
 interface GeoEntity {
   entity_id: string;
@@ -136,9 +145,6 @@ class HuiMapCard extends LitElement implements LovelaceCard {
   @state() private _clusterMarkers = true;
 
   @state() private _overviewSelected?: string;
-
-  // Restored by the overview's back button
-  private _viewBeforeFocus?: HaMapView | { entityId: string };
 
   @state() private _overviewTab: OverviewTab = "people";
 
@@ -552,6 +558,8 @@ class HuiMapCard extends LitElement implements LovelaceCard {
 
   public connectedCallback() {
     super.connectedCallback();
+    window.addEventListener("popstate", this._syncSelection);
+    this._syncSelection();
     if (this.hasUpdated && this._configEntities?.length) {
       this._subscribeHistory();
     }
@@ -559,8 +567,14 @@ class HuiMapCard extends LitElement implements LovelaceCard {
 
   public disconnectedCallback() {
     super.disconnectedCallback();
+    window.removeEventListener("popstate", this._syncSelection);
     this._unsubscribeHistory();
   }
+
+  private _syncSelection = () => {
+    this._overviewSelected =
+      extractSearchParam(SELECTED_ENTITY_PARAM) ?? undefined;
+  };
 
   private _subscribeHistory() {
     if (
@@ -613,6 +627,16 @@ class HuiMapCard extends LitElement implements LovelaceCard {
     if (changedProps.has("_config")) {
       this._computePadding();
     }
+    if (
+      changedProps.has("_overviewSelected") &&
+      this.layout === PANEL_VIEW_LAYOUT
+    ) {
+      if (this._overviewSelected) {
+        this._focusEntity(this._overviewSelected);
+      } else {
+        this._map?.fitMap({ unpause_autofit: true });
+      }
+    }
   }
 
   private _computePadding(): void {
@@ -643,10 +667,8 @@ class HuiMapCard extends LitElement implements LovelaceCard {
   }
 
   private _handleMapClicked() {
-    // A click on the map itself (not on a marker) deselects, staying put
     if (this._overviewSelected) {
-      this._overviewSelected = undefined;
-      this._viewBeforeFocus = undefined;
+      this._navigateSelection(removeSearchParam(SELECTED_ENTITY_PARAM));
     }
   }
 
@@ -693,35 +715,30 @@ class HuiMapCard extends LitElement implements LovelaceCard {
   private _handleOverviewSelect(ev: HASSDomEvent<{ entityId?: string }>) {
     if (ev.detail.entityId) {
       this._select(ev.detail.entityId);
+    } else if (getHistoryState()?.[SELECTION_HISTORY_KEY]) {
+      mainWindow.history.back();
     } else {
-      this._overviewSelected = undefined;
-      this._restoreView();
+      this._navigateSelection(removeSearchParam(SELECTED_ENTITY_PARAM), true);
     }
   }
 
   private _select(entityId: string) {
-    const previous = this._overviewSelected;
-    if (previous && previous !== entityId) {
-      this._viewBeforeFocus = { entityId: previous };
-    } else if (!previous) {
-      this._viewBeforeFocus = this._map?.getView();
-    }
-    this._overviewSelected = entityId;
-    this._focusEntity(entityId);
-  }
-
-  private _restoreView() {
-    const view = this._viewBeforeFocus;
-    this._viewBeforeFocus = undefined;
-    if (!view) {
+    if (entityId === this._overviewSelected) {
+      this._focusEntity(entityId);
       return;
     }
-    if ("entityId" in view) {
-      this._focusEntity(view.entityId);
-    } else if (view.autoFit) {
-      this._map?.fitMap({ unpause_autofit: true });
-    } else {
-      this._map?.setView(view.center, view.zoom, true);
+    this._navigateSelection(
+      addSearchParam({ [SELECTED_ENTITY_PARAM]: entityId })
+    );
+  }
+
+  private async _navigateSelection(searchParams: string, replace = false) {
+    const navigated = await navigate(constructUrlCurrentPath(searchParams), {
+      replace,
+      data: { [SELECTION_HISTORY_KEY]: true },
+    });
+    if (navigated) {
+      this._syncSelection();
     }
   }
 

@@ -235,7 +235,7 @@ export interface MapEngine {
   /** Show a scale ruler (bottom start); null hides it */
   setScaleRuler(options: { metric: boolean } | null): void;
 
-  setView(center: MapLatLng, zoom?: number, animate?: boolean): void;
+  setView(center: MapLatLng, zoom?: number): void;
 
   getView(): MapView | undefined;
 
