@@ -26,6 +26,7 @@ import type { HomeAssistant } from "../types";
 export interface EnergyCollectionControllerOptions {
   /** Subscribing waits until this returns a config. */
   config: () => { collection_key?: string } | undefined;
+  beforeSubscribe?: (collection: EnergyCollection) => void;
   onData: (data: EnergyData) => void;
 }
 
@@ -149,6 +150,7 @@ export class EnergyCollectionController extends ContextController {
       panelUrl: this._panelUrl ?? "",
       key,
     });
+    this._options.beforeSubscribe?.(this._collection);
     this._unsub = this._collection.subscribe(this._options.onData);
   }
 
