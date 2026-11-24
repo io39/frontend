@@ -222,37 +222,34 @@ export const computeCards = (
     }
   }
 
+  // Compute each row's sort keys once: formatting a name is expensive and the
+  // comparator runs O(n log n) times.
+  const sortKeys = new Map<
+    string | EntityConfig,
+    { sensor: boolean; name: string }
+  >();
+  for (const conf of entitiesConf) {
+    const entityId = typeof conf === "string" ? conf : conf.entity;
+    const stateObj = states[entityId];
+    sortKeys.set(conf, {
+      sensor: SENSOR_ENTITIES.includes(computeDomain(entityId)),
+      name: stateObj
+        ? typeof conf === "string"
+          ? hass.formatEntityName(stateObj)
+          : hass.formatEntityName(stateObj, conf.name)
+        : "",
+    });
+  }
+
   entitiesConf.sort((a, b) => {
-    const entityIdA = typeof a === "string" ? a : a.entity;
-    const entityIdB = typeof b === "string" ? b : b.entity;
+    const keyA = sortKeys.get(a)!;
+    const keyB = sortKeys.get(b)!;
 
-    const categoryA = SENSOR_ENTITIES.includes(computeDomain(entityIdA))
-      ? "sensor"
-      : "control";
-    const categoryB = SENSOR_ENTITIES.includes(computeDomain(entityIdB))
-      ? "sensor"
-      : "control";
-
-    if (categoryA !== categoryB) {
-      return categoryA === "sensor" ? 1 : -1;
+    if (keyA.sensor !== keyB.sensor) {
+      return keyA.sensor ? 1 : -1;
     }
 
-    return stringCompare(
-      typeof a === "string"
-        ? states[a]
-          ? hass.formatEntityName(states[a])
-          : ""
-        : states[a.entity]
-          ? hass.formatEntityName(states[a.entity], a.name)
-          : "",
-      typeof b === "string"
-        ? states[b]
-          ? hass.formatEntityName(states[b])
-          : ""
-        : states[b.entity]
-          ? hass.formatEntityName(states[b.entity], b.name)
-          : ""
-    );
+    return stringCompare(keyA.name, keyB.name);
   });
 
   // If we ended up with footer entities but no normal entities,
@@ -429,14 +426,17 @@ export const generateViewConfig = (
       stringCompare(domainTranslations[domain1], domainTranslations[domain2])
     )
     .forEach((domain) => {
+      const names = new Map(
+        ungroupedEntitites[domain].map((entityId) => [
+          entityId,
+          hass.formatEntityName(entities[entityId]),
+        ])
+      );
       cards.push(
         ...computeCards(
           hass,
           ungroupedEntitites[domain].sort((a, b) =>
-            stringCompare(
-              hass.formatEntityName(entities[a]),
-              hass.formatEntityName(entities[b])
-            )
+            stringCompare(names.get(a)!, names.get(b)!)
           ),
           {
             title: domainTranslations[domain],
