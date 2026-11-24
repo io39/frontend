@@ -1,0 +1,157 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generateDefaultViewConfig characterization > generates the same view for a large home 1`] = `"895a043ac2ee1b285b6c9e90eda0eae38dd8579d1f1f517ea4bba6b0f480e748"`;
+
+exports[`generateDefaultViewConfig characterization > generates the same view for a medium home 1`] = `"039a8bf9e1abd8c54afd455823a2d8ebde8eee23a8aabd570134e6b8b7bd5aa2"`;
+
+exports[`generateDefaultViewConfig characterization > generates the same view for a small home 1`] = `
+{
+  "cards": [
+    {
+      "cards": [
+        {
+          "entities": [
+            "lock.device_6_0",
+            "binary_sensor.device_6_1",
+            "binary_sensor.device_3_2",
+            "sensor.device_3_1",
+            "sensor.device_9_1",
+            "sensor.device_6_2",
+            "sensor.device_9_2",
+            "sensor.device_3_0",
+          ],
+          "title": "Room 0",
+          "type": "entities",
+        },
+        {
+          "entity": "climate.device_9_0",
+          "features": undefined,
+          "type": "thermostat",
+        },
+      ],
+      "columns": 1,
+      "square": false,
+      "type": "grid",
+    },
+    {
+      "entities": [
+        "cover.device_4_0",
+        "light.device_7_0",
+        "switch.device_1_0",
+        "sensor.device_1_1",
+        "sensor.device_4_1",
+        "sensor.device_1_2",
+      ],
+      "title": "Room 1",
+      "type": "entities",
+    },
+    {
+      "cards": [
+        {
+          "entities": [
+            "cover.device_11_0",
+            "switch.device_8_0",
+            "sensor.device_2_1",
+            "sensor.device_8_1",
+            "sensor.device_11_1",
+            "sensor.device_2_2",
+            "sensor.device_8_2",
+          ],
+          "title": "Room 2",
+          "type": "entities",
+        },
+        {
+          "entity": "climate.device_2_0",
+          "features": undefined,
+          "type": "thermostat",
+        },
+      ],
+      "columns": 1,
+      "square": false,
+      "type": "grid",
+    },
+    {
+      "entities": [
+        "light.device_0_0",
+        "light.loose_6",
+        "light.loose_2",
+      ],
+      "title": "component.light.title",
+      "type": "entities",
+    },
+    {
+      "entities": [
+        "sensor.loose_4",
+        "sensor.loose_0",
+      ],
+      "title": "component.sensor.title",
+      "type": "entities",
+    },
+    {
+      "entities": [
+        "switch.loose_5",
+        "switch.loose_1",
+      ],
+      "title": "component.switch.title",
+      "type": "entities",
+    },
+    {
+      "entities": [
+        "input_boolean.loose_7",
+        "input_boolean.loose_3",
+      ],
+      "title": "ui.panel.lovelace.strategy.original-states.helpers",
+      "type": "entities",
+    },
+    {
+      "cards": [
+        {
+          "entities": [
+            {
+              "entity": "switch.device_5_1",
+              "name": {
+                "type": "entity",
+              },
+            },
+          ],
+          "title": "media player 5",
+          "type": "entities",
+        },
+        {
+          "entity": "media_player.device_5_0",
+          "type": "media-control",
+        },
+      ],
+      "columns": 1,
+      "square": false,
+      "type": "grid",
+    },
+    {
+      "entities": [
+        {
+          "entity": "binary_sensor.device_10_2",
+          "name": {
+            "type": "entity",
+          },
+        },
+        {
+          "entity": "sensor.device_10_1",
+          "name": {
+            "type": "entity",
+          },
+        },
+        {
+          "entity": "sensor.device_10_0",
+          "name": {
+            "type": "entity",
+          },
+        },
+      ],
+      "title": "sensor 10",
+      "type": "entities",
+    },
+  ],
+  "path": "default_view",
+  "title": "Home",
+}
+`;
